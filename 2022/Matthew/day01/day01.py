@@ -15,7 +15,7 @@ class BandOfElves:
     def elf_calories(self, top_n):
         top_supplies = sorted(self.supplies)[(-1*top_n):]
         top_sum = sum(top_supplies)
-        print(f'The top {top_n} elfs have {top_sum} calories')
+        print(f'The top {top_n} elves have {top_sum} calories')
 
 
 d1 = BandOfElves()
