@@ -1,9 +1,11 @@
+# %%
 with open('data.txt') as f:
     data = []
     for line in f:
         line = line.rstrip()
-        compartment_1 = set(list(line[:int(len(line)/2)]))
-        compartment_2 = set(list(line[int(len(line)/2):]))
+        partition = int(len(line)/2)
+        compartment_1 = set(list(line[:partition]))
+        compartment_2 = set(list(line[partition:]))
         data.append([compartment_1, compartment_2])
 
 alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
