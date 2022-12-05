@@ -5,7 +5,6 @@ class Day4:
     def __init__(self):
         self.full_overlap = 0
         self.partial_overlap = 0
-        self
         with open('day04.txt', 'r') as f:
             self.pairs = list(map(self.convert, f.read().splitlines()))
 
@@ -20,6 +19,7 @@ class Day4:
             self.partial_overlap += 1
         return pair
 
+    # The following two methods are silly
     def get_full_overlap(self):
         print(f"The number of full overlaps is {self.full_overlap}")
         return self.full_overlap
