@@ -14,6 +14,7 @@ class Day6:
             else:
                 marker = marker[1:] + char
                 count += 1
+        print('No markers found')
         return None, -1
 
 
