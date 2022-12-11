@@ -7,7 +7,8 @@ counter = 0
 class TreeCounter():
     def __init__(self):
         with open('data.txt', 'r') as f:
-            self.data = list(map(lambda x: list(map(int, list(x))), f.read().splitlines()))
+            self.data = list(
+                map(lambda x: list(map(int, list(x))), f.read().splitlines()))
 
     def count_visible(self, trees, indices):
         finished = True
