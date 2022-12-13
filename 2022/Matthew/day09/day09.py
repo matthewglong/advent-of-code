@@ -1,13 +1,16 @@
-# %%
 class Board:
-    def __init__(self):
+    def __init__(self, tail_size=1):
         with open('day09.txt', 'r') as f:
             self.commands = [Command(row) for row in f]
         self.positions = {}
         p = self.access_position(0, 0)
         p.tail_visit = True
         self.head = Token(p)
-        self.tail = Token(p)
+        parent = self.head
+        for i in range(tail_size):
+            t = Token(p)
+            parent.next_token = t
+            parent = parent.next_token
         self.direction_map = {
             'U': (0, 1),
             'D': (0, -1),
@@ -34,7 +37,7 @@ class Board:
             new_hy += y_inc
             p = self.access_position(new_hx, new_hy)
             self.head.position = p
-            self.move_tail()
+            self.follow_head()
 
     def access_position(self, x, y):
         k = f"{x}_{y}"
@@ -42,28 +45,35 @@ class Board:
             self.positions[k] = Position(x, y)
         return self.positions[k]
 
-    def move_tail(self):
-        hx = self.head.position.x
-        hy = self.head.position.y
-        tx = new_tx = self.tail.position.x
-        ty = new_ty = self.tail.position.y
+    def follow_head(self):
+        leader = self.head
+        follower = self.head.next_token
+        while follower:
+            hx = leader.position.x
+            hy = leader.position.y
+            tx = new_tx = follower.position.x
+            ty = new_ty = follower.position.y
 
-        x_dist = abs(hx - tx)
-        y_dist = abs(hy - ty)
+            x_dist = abs(hx - tx)
+            y_dist = abs(hy - ty)
 
-        if x_dist > 1:
-            new_tx = HF.step_closer(hx, tx)
-            if y_dist > 0:
-                new_ty = HF.step_closer(hy, ty)
-
-        if y_dist > 1:
-            new_ty = HF.step_closer(hy, ty)
-            if x_dist > 0:
+            if x_dist > 1:
                 new_tx = HF.step_closer(hx, tx)
+                if y_dist > 0:
+                    new_ty = HF.step_closer(hy, ty)
 
-        p = self.access_position(new_tx, new_ty)
-        p.tail_visit = True
-        self.tail.position = p
+            if y_dist > 1:
+                new_ty = HF.step_closer(hy, ty)
+                if x_dist > 0:
+                    new_tx = HF.step_closer(hx, tx)
+
+            p = self.access_position(new_tx, new_ty)
+            if not follower.next_token:
+                p.tail_visit = True
+            follower.position = p
+
+            leader = leader.next_token
+            follower = follower.next_token
 
 
 class Position:
@@ -79,17 +89,10 @@ class Position:
 class Token:
     def __init__(self, position):
         self.position = position
+        self.next_token = None
 
     def __repr__(self):
-        return f'token --> {self.position}'
-
-
-class HF:
-    def step_closer(leader, follower):
-        if leader >= follower:
-            return follower + 1
-        else:
-            return follower - 1
+        return f'token {self.name} --> {self.position}'
 
 
 class Command:
@@ -101,5 +104,16 @@ class Command:
         return f'{self.direction} for {self.spaces} spaces'
 
 
-b = Board()
-b.num_tail_visits()
+class HF:
+    def step_closer(leader, follower):
+        if leader >= follower:
+            return follower + 1
+        else:
+            return follower - 1
+
+
+b1 = Board(1)
+b1.num_tail_visits()
+
+b2 = Board(9)
+b2.num_tail_visits()
