@@ -1,3 +1,4 @@
+# %%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,68 +9,131 @@ class Topography():
         map_dict = {k: v for v, k in enumerate('abcdefghijklmnopqrstuvwxyz')}
 
         raw_data = []
+        raw_display = []
         with open('day12.txt', 'r') as f:
             for row, l in enumerate(f.read().splitlines()):
                 line = []
-                for column, square in enumerate(l):
+                for col, square in enumerate(l):
                     if square == 'S':
-                        line.append(0)
-                        self.start = self.curr_position = [row, column]
+                        val = 0
+                        self.start_loc = self.curr_loc = [row, col]
                     elif square == 'E':
-                        line.append(25)
-                        self.destination = [row, column]
+                        val = 25
+                        self.destination_loc = [row, col]
                     else:
-                        line.append(map_dict[square])
+                        val = map_dict[square]
+                    p = Position(row, col, val)
+                    line.append(p)
+                    raw_display.append(val)
                 raw_data.append(line)
         self.master_map = np.array(raw_data)
-        self.max_row, self.max_col = self.master_map.shape
+        s = self.master_map.shape
+        self.display_map = np.array(raw_display).reshape(s)
+        self.max_row, self.max_col = s
+        self.worst_distance = self.max_col + self.max_row
+        self.places_gone = []
 
-    def position_val(self, position):
-        row, column = position
-        val = self.master_map[row, column]
-        return val
+    def progress_n(self, n):
+        for _ in range(n):
+            self.progress()
 
-    def possible_moves(self, position):
-        row, col = position
-        move = {}
+    def progress(self):
+        curr_position = self.get_position(self.curr_loc)
+        self.inspect_position(curr_position)
+        shortest_distance = self.worst_distance
+        for p in curr_position.possible_next_positions:
+            if p.distance_from_destination < shortest_distance:
+                next_loc = p.loc
+                shortest_distance = p.distance_from_destination
+        self.curr_loc = next_loc
 
-        curr_val = self.position_val(position)
-        print('curr val is', curr_val)
+    def get_position(self, loc):
+        p = self.master_map[loc[0], loc[1]]
+        return p
 
-        if row != 0:
-            m = [row - 1, col]
-            n = self.position_val(m)
-            if n <= curr_val + 1:
-                move['up'] = m
+    def inspect_position(self, p):
+        # If first time visit
+        if not p.visited:
 
-        if row != self.max_row:
-            m = [row + 1, col]
-            n = self.position_val(m)
-            if n <= curr_val + 1:
-                move['down'] = m
+            self.places_gone.append(p.loc)
 
-        if col != 0:
-            m = [row, col - 1]
-            n = self.position_val(m)
-            if n <= curr_val + 1:
-                move['left'] = m
+            # Mark as visited
+            p.visited = True
 
-        if col != self.max_col:
-            m = [row, col + 1]
-            n = self.position_val(m)
-            if n <= curr_val + 1:
-                move['right'] = m
+            # Find possible next moves
+            if p.row != 0:
+                next_p = self.master_map[p.row - 1, p.col]
+                if not next_p.distance_from_destination:
+                    next_p.distance_from_destination = self.distance(
+                        next_p.loc)
+                if next_p.val <= p.val + 1:
+                    p.possible_next_positions.append(next_p)
 
-        return move
+            if p.row != self.max_row:
+                next_p = self.master_map[p.row + 1, p.col]
+                if not next_p.distance_from_destination:
+                    next_p.distance_from_destination = self.distance(
+                        next_p.loc)
+
+                if next_p.val <= p.val + 1:
+                    p.possible_next_positions.append(next_p)
+
+            if p.col != 0:
+                next_p = self.master_map[p.row, p.col - 1]
+                if not next_p.distance_from_destination:
+                    next_p.distance_from_destination = self.distance(
+                        next_p.loc)
+                if next_p.val <= p.val + 1:
+                    p.possible_next_positions.append(next_p)
+
+            if p.col != self.max_col:
+                next_p = self.master_map[p.row, p.col + 1]
+                if not next_p.distance_from_destination:
+                    next_p.distance_from_destination = self.distance(
+                        next_p.loc)
+                if next_p.val <= p.val + 1:
+                    p.possible_next_positions.append(next_p)
+
+        # If not our first rodeo
+        else:
+            pass
+
+    def distance(self, start=None, stop=None):
+        if not start:
+            start = self.curr_loc
+        if not stop:
+            stop = self.destination_loc
+        manhatt_dist = abs(stop[0]-start[0]) + abs(stop[1]-start[1])
+        return manhatt_dist
 
 
+class Position:
+    def __init__(self, row, col, val):
+        self.row = row
+        self.col = col
+        self.val = val
+        self.loc = [row, col]
+        self.possible_next_positions = []
+        self.visited = False
+        self.distance_from_destination = None
+
+    def __repr__(self):
+        return f'{self.loc} ({self.distance_from_destination})'
+
+
+# %%
 T = Topography()
 
-print(T.possible_moves([25, 3]))
+T.progress_n(75)
 
-plt.imshow(T.master_map)
-plt.scatter(*T.start[::-1], c='red', marker='>')
-plt.scatter(*T.destination[::-1], c='green')
-plt.scatter(*[25, 3][::-1], c='yellow', marker='.', alpha=0.3)
+plt.imshow(T.display_map)
+plt.scatter(*T.start_loc[::-1], c='red', marker='>')
+plt.scatter(*T.destination_loc[::-1], c='green')
+d = np.array(T.places_gone)
+plt.scatter(d[:, 1], d[:, 0], c='yellow', marker='.', alpha=0.3)
 plt.title('Topographical Map')
 plt.show()
+
+# %%
+d
+# %%
