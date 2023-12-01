@@ -1,0 +1,3 @@
+move in the direction that minimizes the manhattan distance between the current
+point p and the destination
+
