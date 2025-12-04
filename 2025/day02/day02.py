@@ -52,8 +52,8 @@ def is_bad_id_v1(id):
     if size % 2 == 1:
         return False
     part = int(size/2)
-    left = id[part:]
-    right = id[:part]
+    left = id[:part]
+    right = id[part:]
     return left == right
 
 def chunks(lst, n):
