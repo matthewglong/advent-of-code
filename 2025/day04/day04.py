@@ -73,9 +73,8 @@ class PaperRolls:
     def is_accessible_roll(self, row, col, max_neighbors=4, radius=1):
         if not self.is_roll(row, col):
             return False
-        curr_role = 1
         section = self.get_section(row, col, radius)
-        status = section.sum() < max_neighbors + curr_role
+        status = section.sum() < max_neighbors + 1 # the 1 accounts for roll in question
         return status
     
     def remove_roll(self, row, col, max_neighbors, radius):
@@ -96,7 +95,7 @@ class PaperRolls:
                 available_rolls += 1
         return available_rolls
     
-    def remove_all_rows(self, max_neighbors=4, radius=1):
+    def remove_all_rolls(self, max_neighbors=4, radius=1):
         check_again = True
         while check_again:
             changes_this_loop = 0
@@ -113,7 +112,7 @@ p = PaperRolls()
 answer1 = p.count_available_paper_rolls_without_removal(max_neighbors=4, radius=1)
 print(f"Part 1: There are {answer1} accessible rolls")
 
-p.remove_all_rows()
+p.remove_all_rolls()
 rolls_removed = p.num_rolls_removed()
 print(f"Part 2: We removed {rolls_removed} rolls")
 # %%
