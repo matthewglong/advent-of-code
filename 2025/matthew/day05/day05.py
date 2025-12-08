@@ -39,17 +39,31 @@ Process the database file from the new inventory management system. How many of 
 
 FILE = "day05.txt"
 
+def clean_ranges(raw_ranges):
+        raw_ranges = sorted(raw_ranges)
+        clean_ranges = []
+        prev = raw_ranges[0]
+        for curr in raw_ranges[1:]:
+            if (prev[1] >= curr[0] - 1):
+                prev = [prev[0], max(prev[1], curr[1])]
+            else:
+                clean_ranges.append(prev)
+                prev = curr
+        if prev != curr:
+            clean_ranges.append([prev[0], max(prev[1], curr[1])])
+        return clean_ranges
+
 class Inventory:
     def __init__(self, file=FILE):
         with open(file, "r") as f:
             r_fresh, r_available = f.read().split("\n\n")
         raw_ranges = [list(map(int, r.split("-"))) for r in r_fresh.splitlines()]
-        clean_raw_ranges = self.clean_ranges(raw_ranges)
+        clean_raw_ranges = clean_ranges(raw_ranges)
         fresh_ranges = [range(r[0], r[1]+1) for r in clean_raw_ranges]
         available = list(map(int, r_available.splitlines()))
         self.fresh_ranges = fresh_ranges
         self.available = available
-        self.raw_ranges = [list(map(int, r.split("-"))) for r in r_fresh.splitlines()]
+        # self.raw_ranges = [list(map(int, r.split("-"))) for r in r_fresh.splitlines()]
     def get_fresh(self):
         fresh_ingredients = list()
         for ingredient in self.available:
@@ -63,7 +77,7 @@ class Inventory:
         fresh_ingredients = self.get_fresh()
         return len(fresh_ingredients)
     
-    def get_possible_fresh(self):
+    def get_possible_fresh_DEPRECATED(self):
         possible_fresh = set()
         for fresh_range in self.fresh_ranges:
             new_range = set(fresh_range)
@@ -72,31 +86,34 @@ class Inventory:
         return possible_fresh
     
     def clean_ranges(self, raw_ranges):
-        ranges = sorted(ranges)
-        print(ranges, '\n')
+        raw_ranges = sorted(raw_ranges)
         clean_ranges = []
-        prev = ranges[0]
-        for curr in ranges[1:]:
-            print(f"prev: {prev} | curr: {curr} | clean: {clean_ranges}")
+        prev = raw_ranges[0]
+        for curr in raw_ranges[1:]:
             if (prev[1] >= curr[0] - 1):
-                print("Overlap!")
                 prev = [prev[0], max(prev[1], curr[1])]
             else:
-                print("Break!")
                 clean_ranges.append(prev)
                 prev = curr
-            print('')
         if prev != curr:
             clean_ranges.append([prev[0], max(prev[1], curr[1])])
+        return clean_ranges
     
+    def get_possible_fresh(self):
+        total = 0
+        for r in self.fresh_ranges:
+            total += r.stop - r.start
+        return total
+
         
 inventory = Inventory()
 fresh_count = inventory.count_fresh()
-print(f"Part 1: There are {fresh_count} ingredients")
+print(f"Part 1: There are {fresh_count} fresh ingredients")
 
+possible_fresh = inventory.get_possible_fresh()
+print(f"Part 2: There are {possible_fresh} possible fresh ingredients")
 # %%
 
-# %%
 """
 --- Part Two ---
 The Elves start bringing their spoiled inventory to the trash chute at the back of the kitchen.
@@ -113,26 +130,3 @@ The ingredient IDs that these ranges consider to be fresh are 3, 4, 5, 10, 11, 1
 
 Process the database file again. How many ingredient IDs are considered to be fresh according to the fresh ingredient ID ranges?
 """
-
-
-def merge_ranges(a, b):
-    print([a,b])
-    a_start, a_stop = a
-    b_start, b_stop = b
-    if (a_stop < b_start) or (b_stop < a_start):
-        print(f"no change for {a} {b}")
-        return [a, b], 0
-    print(f"yes change for {a} {b}")
-    return [[min(a_start, b_start), max(a_stop, b_stop)]], 1
-
-# clean_ranges = inventory.raw_ranges.copy()
-# %%
-ranges = [
-    [3, 5],
-    [11, 100],
-    [10, 22],
-    [2, 9],
-    [3, 4],
-    [7, 9]
-]
-
