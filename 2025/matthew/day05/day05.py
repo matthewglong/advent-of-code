@@ -43,11 +43,9 @@ class Inventory:
     def __init__(self, file=FILE):
         with open(file, "r") as f:
             r_fresh, r_available = f.read().split("\n\n")
-        fresh_ranges = list()
-        for r_str in r_fresh.splitlines():
-            start, stop = map(int, r_str.split("-"))
-            r = range(start, stop+1)
-            fresh_ranges.append(r)
+        raw_ranges = [list(map(int, r.split("-"))) for r in r_fresh.splitlines()]
+        clean_raw_ranges = self.clean_ranges(raw_ranges)
+        fresh_ranges = [range(r[0], r[1]+1) for r in clean_raw_ranges]
         available = list(map(int, r_available.splitlines()))
         self.fresh_ranges = fresh_ranges
         self.available = available
@@ -73,6 +71,24 @@ class Inventory:
             possible_fresh = possible_fresh.union(new_range)
         return possible_fresh
     
+    def clean_ranges(self, raw_ranges):
+        ranges = sorted(ranges)
+        print(ranges, '\n')
+        clean_ranges = []
+        prev = ranges[0]
+        for curr in ranges[1:]:
+            print(f"prev: {prev} | curr: {curr} | clean: {clean_ranges}")
+            if (prev[1] >= curr[0] - 1):
+                print("Overlap!")
+                prev = [prev[0], max(prev[1], curr[1])]
+            else:
+                print("Break!")
+                clean_ranges.append(prev)
+                prev = curr
+            print('')
+        if prev != curr:
+            clean_ranges.append([prev[0], max(prev[1], curr[1])])
+    
         
 inventory = Inventory()
 fresh_count = inventory.count_fresh()
@@ -97,7 +113,26 @@ The ingredient IDs that these ranges consider to be fresh are 3, 4, 5, 10, 11, 1
 
 Process the database file again. How many ingredient IDs are considered to be fresh according to the fresh ingredient ID ranges?
 """
-# %%
 
-inventory.raw_ranges
+
+def merge_ranges(a, b):
+    print([a,b])
+    a_start, a_stop = a
+    b_start, b_stop = b
+    if (a_stop < b_start) or (b_stop < a_start):
+        print(f"no change for {a} {b}")
+        return [a, b], 0
+    print(f"yes change for {a} {b}")
+    return [[min(a_start, b_start), max(a_stop, b_stop)]], 1
+
+# clean_ranges = inventory.raw_ranges.copy()
 # %%
+ranges = [
+    [3, 5],
+    [11, 100],
+    [10, 22],
+    [2, 9],
+    [3, 4],
+    [7, 9]
+]
+
