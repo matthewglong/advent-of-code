@@ -1,0 +1,153 @@
+================================================================================
+                        CODE REVIEW: Day 7 - Laboratories
+                        Senior Engineer Mentorship Document
+================================================================================
+
+OVERVIEW
+--------
+This is a beam simulation problem where tachyon beams travel downward through a
+manifold, splitting when they hit "^" splitters. Part 1 counts total splits.
+
+Status: Part 1 implemented.
+
+
+================================================================================
+WHAT YOU DID WELL
+================================================================================
+
+1. CLEAN CLASS STRUCTURE
+   Creating TachyonManifold as a class is the right call. The problem has clear
+   state (the grid, dimensions) and behavior (simulation). This shows good
+   instincts about when OOP helps.
+
+2. SET-BASED BEAM TRACKING (lines 156-175)
+   Using a set for beam_indexes is clever:
+   - Automatically handles the "beams merge when they overlap" case
+   - O(1) lookups and insertions
+   - The problem statement explicitly shows beams combining (lines 98-99)
+
+   This is exactly the right data structure for Part 1.
+
+3. CONSTANTS AT MODULE LEVEL (lines 142-143)
+   Defining BEAM = "|" and SPLIT = "^" as constants is good practice. It makes
+   the code self-documenting and easy to change if needed.
+
+4. BOUNDARY CHECKING (lines 166-171)
+   You correctly check that left_side >= 0 and right_side < self.width before
+   adding new beams. Edge cases handled properly.
+
+5. PROPER USE OF SELF (lines 159, 169)
+   Using self.height and self.width inside the method is correct. This makes
+   the class self-contained and reusable.
+
+6. CORRECT BEAM PROPAGATION (line 175)
+   The `beam_indexes = new_beam_indexes` assignment ensures beams correctly
+   propagate to the next row. Good job tracking state between iterations.
+
+
+================================================================================
+REMAINING ISSUES
+================================================================================
+
+1. SHALLOW COPY BUG (line 154)
+
+   Current code:
+       simulation = self.manifold_diagram.copy()
+
+   Problem: This creates a shallow copy. The outer list is new, but the inner
+   lists (rows) are still the same objects. When you do:
+       simulation[y][x] = BEAM
+
+   You're actually modifying self.manifold_diagram too!
+
+   To see this bug: call tm.simulate_splits() twice. The second run will have
+   beams already drawn from the first run.
+
+   Fix:
+       simulation = [row.copy() for row in self.manifold_diagram]
+
+   Or use copy.deepcopy(), though the list comprehension is more Pythonic here.
+
+
+================================================================================
+STYLE SUGGESTIONS
+================================================================================
+
+1. UNNECESSARY PARENTHESES (lines 166, 169)
+
+   Current:  if (left_side >= 0):
+   Pythonic: if left_side >= 0:
+
+   Python doesn't require parentheses around conditionals. Removing them is
+   more idiomatic.
+
+2. PRINTING INSIDE SIMULATION (lines 177-178)
+
+   Side effects in a method named simulate_splits() are unexpected. Consider:
+   - Return the simulation grid along with the count
+   - Or create a separate print_manifold() method
+   - Or add a debug=False parameter:
+
+       def simulate_splits(self, debug=False):
+           ...
+           if debug:
+               for row in simulation:
+                   print("".join(row))
+           return num_splits
+
+3. FILE PARAMETER
+
+   Consider making FILE a parameter to __init__ instead of a module constant.
+   This makes the class reusable and testable:
+
+       def __init__(self, filepath="day07.txt"):
+           with open(filepath, "r") as f:
+               ...
+
+4. RETURN VALUE NOT CAPTURED (line 184)
+
+   Current:  tm.simulate_splits()
+   Better:   num_splits = tm.simulate_splits()
+             print(f"Part 1: {num_splits}")
+
+   The return value is currently discarded. Capture and display it explicitly.
+
+
+================================================================================
+TESTING SUGGESTION
+================================================================================
+
+The problem gives you a worked example. Before running on day07.txt, validate
+your code against the example:
+
+    Example grid: 15 columns, 16 rows
+    Expected Part 1: 21 splits
+
+Create a day07_test.txt with the example input and verify your output matches.
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Remaining bug:
+  [ ] Use deep copy for simulation grid: [row.copy() for row in self.manifold_diagram]
+
+Style improvements (optional):
+  [ ] Remove unnecessary parentheses in conditionals
+  [ ] Separate printing from simulation logic
+  [ ] Make filepath a parameter
+  [ ] Capture and display the return value
+
+Good work on:
+  - Class-based design
+  - Set for natural deduplication
+  - Boundary checking
+  - Constants for magic characters
+  - Proper use of self
+  - Correct beam propagation between rows
+
+The core algorithm is solid. The shallow copy issue is a common Python gotcha
+with nested lists—worth remembering for future grid-based problems.
+
+— Senior Engineer Review
